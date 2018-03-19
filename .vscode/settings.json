@@ -1,0 +1,6 @@
+{
+    "typescript.validate.enable": false,
+    "typescript.format.enable": false,
+    "javascript.validate.enable": false,
+    "files.eol": "\n"
+}
