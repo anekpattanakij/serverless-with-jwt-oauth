@@ -45,23 +45,21 @@ export const register = async (event, context, callback) => {
     }
     // TODO Check for input format
 
-    const returnUserToken: User = new User(
+    const inputNewUser: User = new User(
       0,
       inputObject.displayName,
       inputObject.email,
       sha3_512(inputObject.password),
       1,
+      '',
+      null,
+      null,
     );
-    const token: string = jwt.sign(
-      JSON.stringify(returnUserToken.toPlainObject()),
-      Config.SIGN_TOKEN,
-    );
-    const tokenSignature = token.split('.')[JWT_SIGNATURE_POSITION];
 
     // Save user to database
     const checkExistingUser: User = await UserUtil.getUser(
       Config.MYSQL_CONFIGURATION,
-      returnUserToken.email,
+      inputNewUser.email,
     ).catch(error => {
       throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
     });
@@ -72,16 +70,20 @@ export const register = async (event, context, callback) => {
         'this user already exist',
       );
     } else {
-      await UserUtil.saveUser(
-        Config.MYSQL_CONFIGURATION,
-        returnUserToken,
-      ).catch(error => {
-        throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
-      });
+      inputNewUser.stampTime();
+      inputNewUser.stampNewRefreshToken();
+      await UserUtil.saveUser(Config.MYSQL_CONFIGURATION, inputNewUser).catch(
+        error => {
+          throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
+        },
+      );
     }
     // if pass all, put success response
     response.statusCode = HTTP_REQUEST_SUCCESS;
-    response.body = JSON.stringify({ token });
+    response.body = JSON.stringify({
+      accessToken: inputNewUser.generateAccessToken,
+      refreshToken: inputNewUser.refreshToken,
+    });
   } catch (error) {
     console.log(error);
     response = errorToHttpStatusCode(error);
