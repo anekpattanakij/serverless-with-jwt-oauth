@@ -80,8 +80,9 @@ export const register = async (event, context, callback) => {
     }
     // if pass all, put success response
     response.statusCode = HTTP_REQUEST_SUCCESS;
+    console.log('access token:' + inputNewUser.generateAccessToken());
     response.body = JSON.stringify({
-      accessToken: inputNewUser.generateAccessToken,
+      accessToken: inputNewUser.generateAccessToken(),
       refreshToken: inputNewUser.refreshToken,
     });
   } catch (error) {

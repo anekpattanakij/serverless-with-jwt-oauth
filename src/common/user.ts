@@ -3,8 +3,7 @@ import * as jwt from 'jsonwebtoken';
 import { Config } from '../config/index';
 import { BaseCustomClass } from './baseCustomClass';
 
-
-const RANDOM_LENGTH: number = 16;
+const RANDOM_LENGTH: number = 20;
 
 export class User extends BaseCustomClass {
   public cif: number;
@@ -57,7 +56,7 @@ export class User extends BaseCustomClass {
         usertype: this.usertype,
       }),
       Config.SIGN_TOKEN,
-      { expiresIn: '5m' },
+      { expiresIn: 300 },
     );
     return token;
   }
