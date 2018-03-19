@@ -49,12 +49,12 @@ export class User extends BaseCustomClass {
 
   public generateAccessToken(): string {
     const token: string = jwt.sign(
-      JSON.stringify({
+      {
         cif: this.cif,
         displayName: this.displayName,
         email: this.email,
         usertype: this.usertype,
-      }),
+      },
       Config.SIGN_TOKEN,
       { expiresIn: 300 },
     );
