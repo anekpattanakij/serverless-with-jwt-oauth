@@ -1,6 +1,5 @@
 import { sha3_512 } from 'js-sha3';
 import * as jwt from 'jsonwebtoken';
-import { thunk } from 'thunks';
 import * as validator from 'validator';
 import {
   Error,
@@ -16,8 +15,6 @@ import { User } from './common/user';
 import { Config } from './config/index';
 import { UserUtil } from './dataLayer/userUtil';
 import { errorToHttpStatusCode } from './util/errorResponseUtil';
-
-const JWT_SIGNATURE_POSITION: number = 2;
 
 export const register = async (event, context, callback) => {
   // console.log('EMAIL_SERVICE_API_KEY: ', process.env.EMAIL_SERVICE_API_KEY);
@@ -43,7 +40,7 @@ export const register = async (event, context, callback) => {
     ) {
       throw new Error(ERROR_CODE_INVALID_INPUT, 'Invalid input');
     }
-    // TODO Check for input format
+    // TODO change user role
 
     const inputNewUser: User = new User(
       0,
@@ -78,6 +75,7 @@ export const register = async (event, context, callback) => {
         },
       );
     }
+    // TODO get auto-generate cif number back to object
     // if pass all, put success response
     response.statusCode = HTTP_REQUEST_SUCCESS;
     console.log('access token:' + inputNewUser.generateAccessToken());

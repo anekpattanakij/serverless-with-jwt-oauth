@@ -37,7 +37,7 @@ export const authorize = async (event, context, callback) => {
         console.log('Unauthorized user:', err.message);
         callback('Unauthorized');
       } else {
-        // TODO validate token
+        // validate token pass
         const resultInStore=false;
         if (resultInStore) {
           const policyDocument = buildIAMPolicy(

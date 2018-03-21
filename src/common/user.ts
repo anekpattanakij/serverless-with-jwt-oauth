@@ -36,6 +36,7 @@ export class User extends BaseCustomClass {
     this.registerDate = registerDate;
   }
 
+
   public stampTime(): void {
     this.lastLoginDate = new Date();
     if (!this.registerDate) {

@@ -120,6 +120,28 @@ functions:
             headers:
               Content-Type: "'text/json'"
 
+  refreshTokenService:
+    handler: src/refreshTokenService.refresh
+    events:
+      - http:
+          method: post
+          path: refreshToken
+          integration: lambda-proxy
+          response:
+            headers:
+              Content-Type: "'text/json'"
+
+  revokeTokenService:
+    handler: src/refreshTokenService.revoke
+    events:
+      - http:
+          method: post
+          path: revokeToken
+          integration: lambda-proxy
+          response:
+            headers:
+              Content-Type: "'text/json'"
+
   auth:
     handler: src/auth.authorize
     events:

@@ -1,5 +1,11 @@
 import * as jwk from 'jsonwebtoken';
-import { Error } from './common/error';
+import {
+  Error,
+  ERROR_CODE_ACCESS_EXPIRE,
+  ERROR_CODE_INVALID_ACCESS_TOKEN,
+  ERROR_CODE_NO_AUTHORIZE_IN_HEADER,
+  ERROR_SERVER_ERROR,
+} from './common/error';
 import {
   HTTP_REQUEST_FAIL,
   HTTP_REQUEST_SUCCESS,
@@ -26,25 +32,42 @@ export const authorizeService = async (
       const token = event.headers.bearer;
       // verify token first
       try {
-        console.log('token to decrupt : '+ token);
+        console.log('token to decrupt : ' + token);
         const decoded = jwk.verify(token, Config.SIGN_TOKEN);
-        
+
         if (decoded) {
+          console.log('Result from decode : ' + JSON.stringify(decoded));
+          // TODO user decode to simple user object 
           response.statusCode = HTTP_REQUEST_SUCCESS;
           response.body = 'pass';
         } else {
           response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
           response.body = JSON.stringify(
-            new Error('ERR_INVALID_TOKEN', 'Invalid token not in store'),
+            new Error(
+              ERROR_CODE_INVALID_ACCESS_TOKEN,
+              'Invalid token not in store',
+            ),
           );
-          callback(response);
         }
+        callback(response);
       } catch (err) {
-        console.log('Invalid token.');
         response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
-        response.body = JSON.stringify(
-          new Error('ERR_INVALID_TOKEN', 'Invalid token FAIL on verify.'),
-        );
+        if (err.name && err.name === 'TokenExpiredError') {
+          response.body = JSON.stringify(
+            new Error(
+              ERROR_CODE_ACCESS_EXPIRE,
+              'Invalid token FAIL on verify.',
+            ),
+          );
+        } else {
+          response.body = JSON.stringify(
+            new Error(
+              ERROR_CODE_INVALID_ACCESS_TOKEN,
+              'Invalid token FAIL on verify.',
+            ),
+          );
+        }
+
         callback(response);
       }
     } else {
@@ -52,7 +75,7 @@ export const authorizeService = async (
       response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
       response.body = JSON.stringify(
         new Error(
-          'ERR_NO_AUTHORIZE_TOKEN_HEADER',
+          ERROR_CODE_NO_AUTHORIZE_IN_HEADER,
           'No authorizationToken found in the header.',
         ),
       );
@@ -62,7 +85,7 @@ export const authorizeService = async (
     console.log(err);
     response.statusCode = HTTP_REQUEST_FAIL;
     response.body = JSON.stringify(
-      new Error('ERR_SYSTEM_ERROR', 'Error in authservice.'),
+      new Error(ERROR_SERVER_ERROR, 'Error in authservice.'),
     );
     callback(response);
   }

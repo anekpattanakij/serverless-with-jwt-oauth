@@ -30,13 +30,13 @@ export class UserUtil {
 
   public static getUser(
     config: MysqlConfiguration,
-    userid: string,
+    email: string,
   ): Promise<User> {
     return new Promise(async (resolve, reject) => {
       const executeResult = await MySqlUtility.mysqlExecute(
         config,
         'SELECT `CIF`,`EMAIL`, `PASSWORD`, `DISPLAY_NAME`, `ROLE`,`REFRESH_TOKEN`,`LAST_LOGIN_DATE`,`REGISTER_DATE` FROM  `USER_LIST` WHERE `EMAIL` = ?',
-        [userid],
+        [email],
       ).catch(error => {
         reject(error);
         return;
@@ -57,6 +57,29 @@ export class UserUtil {
           ),
         );
       }
+    });
+  }
+
+  public static removeRefreshToken(
+    config: MysqlConfiguration,
+    email: string,
+    refreshToken: string,
+  ): Promise<number> {
+    return new Promise(async (resolve, reject) => {
+      const executeResult = await MySqlUtility.mysqlExecute(
+        config,
+        'UPDATE `USER_LIST` SET `REFRESH_TOKEN` = \'\' WHERE `EMAIL` = ? AND `REFRESH_TOKEN` = ?' ,
+        [email,
+        refreshToken],
+      ).catch(error => {
+        reject(error);
+        return;
+      });
+      if(executeResult.affectedRows > 0 )
+      {
+        resolve(executeResult.affectedRows);
+      }
+      resolve(null);
     });
   }
 }
