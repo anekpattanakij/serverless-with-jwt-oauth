@@ -6,6 +6,7 @@ import { BaseCustomClass } from './baseCustomClass';
 const RANDOM_LENGTH: number = 20;
 
 export class User extends BaseCustomClass {
+
   public cif: number;
   public displayName: string;
   public email: string;
@@ -35,7 +36,14 @@ export class User extends BaseCustomClass {
     this.lastLoginDate = lastLoginDate;
     this.registerDate = registerDate;
   }
-
+  
+  // override encode because it has data object
+  public encode() {
+    return Object.assign({}, this, {
+      lastLoginDate: this.lastLoginDate.toString(),
+      registerDate: this.registerDate.toString(),
+    });
+  }
 
   public stampTime(): void {
     this.lastLoginDate = new Date();

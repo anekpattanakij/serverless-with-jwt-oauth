@@ -23,7 +23,6 @@ const getBnkMembers = () => {
 
 export const landing = (event, context, callback): void => {
   authorizeService(event, context, responseFromAuthorizer => {
-    console.log(responseFromAuthorizer);
     if (responseFromAuthorizer.statusCode === HTTP_REQUEST_SUCCESS) {
       const members = getBnkMembers();
       responseFromAuthorizer.body = JSON.stringify(members);

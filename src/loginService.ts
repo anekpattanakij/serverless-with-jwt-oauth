@@ -29,7 +29,7 @@ export const login = async (event, context, callback) => {
       }
 
       const token: string = jwt.sign(
-        getUser.toPlainObject(),
+        getUser.encode(),
         Config.SIGN_TOKEN,
       );
       const tokenSignature = token.split('.')[JWT_SIGNATURE_POSITION];
