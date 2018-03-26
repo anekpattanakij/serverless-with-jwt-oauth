@@ -13,21 +13,21 @@ export const login = async (event, context, callback) => {
   // console.log('EMAIL_SERVICE_API_KEY: ', process.env.EMAIL_SERVICE_API_KEY);
   let hasError: boolean = false;
   let response;
-
   if (event.body) {
     try {
+      const inputObject = JSON.parse(event.body);
+      // TODO check email and password value first
       // store token in as session
       const getUser: User = await UserUtil.getUser(
         Config.MYSQL_CONFIGURATION,
-        event.body.userid,
+        inputObject.email,
       ).catch(error => {
         hasError = true;
         throw error;
       });
-      if (sha3_512(event.body.password) !== getUser.password) {
+      if (!getUser || (sha3_512(inputObject.password) !== getUser.password)) {
         throw new Error('USERERR1', 'Password not match');
       }
-
       const token: string = jwt.sign(
         getUser.encode(),
         Config.SIGN_TOKEN,
@@ -36,6 +36,7 @@ export const login = async (event, context, callback) => {
 
     } catch (error) {
       let returnErrorResponse;
+      console.log(error);
       if (error instanceof Error) {
         returnErrorResponse = error.toPlainObject();
       } else {
