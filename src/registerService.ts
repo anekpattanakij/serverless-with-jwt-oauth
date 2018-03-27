@@ -1,5 +1,4 @@
 import { sha3_512 } from 'js-sha3';
-import * as jwt from 'jsonwebtoken';
 import * as validator from 'validator';
 import {
   Error,
@@ -78,7 +77,6 @@ export const register = async (event, context, callback) => {
     // TODO get auto-generate cif number back to object
     // if pass all, put success response
     response.statusCode = HTTP_REQUEST_SUCCESS;
-    console.log('access token:' + inputNewUser.generateAccessToken());
     response.body = JSON.stringify({
       accessToken: inputNewUser.generateAccessToken(),
       refreshToken: inputNewUser.refreshToken,

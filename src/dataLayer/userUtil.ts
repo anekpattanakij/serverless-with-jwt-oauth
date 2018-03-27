@@ -47,9 +47,9 @@ export class UserUtil {
         resolve(
           new User(
             executeResult[0].CIF,
+            executeResult[0].DISPLAY_NAME,
             executeResult[0].EMAIL,
             executeResult[0].PASSWORD,
-            executeResult[0].DISPLAY_NAME,
             executeResult[0].ROLE,
             executeResult[0].REFRESH_TOKEN,
             executeResult[0].LAST_LOGIN_DATE,
@@ -57,6 +57,28 @@ export class UserUtil {
           ),
         );
       }
+    });
+  }
+
+  public static updateRefreshTokenAndLastLogin(
+    config: MysqlConfiguration,
+    email: string,
+    refreshToken: string,
+    lastLoginDate: Date,
+  ): Promise<number> {
+    return new Promise(async (resolve, reject) => {
+      const executeResult = await MySqlUtility.mysqlExecute(
+        config,
+        'UPDATE `USER_LIST` SET `REFRESH_TOKEN` = ? , `LAST_LOGIN_DATE` = ? WHERE `EMAIL` = ?',
+        [refreshToken, lastLoginDate, email],
+      ).catch(error => {
+        reject(error);
+        return;
+      });
+      if (executeResult.affectedRows > 0) {
+        resolve(executeResult.affectedRows);
+      }
+      resolve(null);
     });
   }
 
@@ -68,15 +90,13 @@ export class UserUtil {
     return new Promise(async (resolve, reject) => {
       const executeResult = await MySqlUtility.mysqlExecute(
         config,
-        'UPDATE `USER_LIST` SET `REFRESH_TOKEN` = \'\' WHERE `EMAIL` = ? AND `REFRESH_TOKEN` = ?' ,
-        [email,
-        refreshToken],
+        'UPDATE `USER_LIST` SET `REFRESH_TOKEN` = `` WHERE `EMAIL` = ? AND `REFRESH_TOKEN` = ?',
+        [email, refreshToken],
       ).catch(error => {
         reject(error);
         return;
       });
-      if(executeResult.affectedRows > 0 )
-      {
+      if (executeResult.affectedRows > 0) {
         resolve(executeResult.affectedRows);
       }
       resolve(null);

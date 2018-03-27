@@ -1,57 +1,66 @@
 import { sha3_512 } from 'js-sha3';
-import * as jwt from 'jsonwebtoken';
-import { thunk } from 'thunks';
-import { Error } from './common/error';
+import * as validator from 'validator';
+import {
+  Error,
+  ERROR_CODE_INVALID_INPUT,
+  ERROR_CODE_MYSQL_CONNECTION,
+} from './common/error';
+import {
+  HTTP_REQUEST_SUCCESS,
+  ResponseRequest,
+} from './common/responseRequest';
 import { User } from './common/user';
 import { Config } from './config/index';
 import { UserUtil } from './dataLayer/userUtil';
-
-const JWT_SIGNATURE_POSITION: number = 2;
-const WAIT_TIME = 1000;
+import { errorToHttpStatusCode } from './util/errorResponseUtil';
 
 export const login = async (event, context, callback) => {
   // console.log('EMAIL_SERVICE_API_KEY: ', process.env.EMAIL_SERVICE_API_KEY);
-  let hasError: boolean = false;
-  let response;
-  if (event.body) {
-    try {
-      const inputObject = JSON.parse(event.body);
-      // TODO check email and password value first
-      // store token in as session
-      const getUser: User = await UserUtil.getUser(
-        Config.MYSQL_CONFIGURATION,
-        inputObject.email,
-      ).catch(error => {
-        hasError = true;
-        throw error;
-      });
-      if (!getUser || (sha3_512(inputObject.password) !== getUser.password)) {
-        throw new Error('USERERR1', 'Password not match');
-      }
-      const token: string = jwt.sign(
-        getUser.encode(),
-        Config.SIGN_TOKEN,
-      );
-      const tokenSignature = token.split('.')[JWT_SIGNATURE_POSITION];
-
-    } catch (error) {
-      let returnErrorResponse;
-      console.log(error);
-      if (error instanceof Error) {
-        returnErrorResponse = error.toPlainObject();
-      } else {
-        returnErrorResponse = { errorCode: 'Invalid input' };
-      }
-      response = {
-        statusCode: 400,
-        body: returnErrorResponse,
-      };
+  let response: ResponseRequest = new ResponseRequest(HTTP_REQUEST_SUCCESS, '');
+  try {
+    if (!event.body) {
+      throw new Error(ERROR_CODE_INVALID_INPUT, 'Invalid input');
     }
-  } else {
-    response = {
-      statusCode: 400,
-      body: { errorCode: 'Invalid input' },
-    };
+
+    const inputObject = JSON.parse(event.body);
+    // TODO check email and password value first
+    if (
+      !inputObject.email ||
+      !validator.isEmail(inputObject.email) ||
+      !inputObject.password ||
+      validator.isEmpty(inputObject.password)
+    ) {
+      throw new Error(ERROR_CODE_INVALID_INPUT, 'Invalid input');
+    }
+    // store token in as session
+    const getUser: User = await UserUtil.getUser(
+      Config.MYSQL_CONFIGURATION,
+      inputObject.email,
+    ).catch(error => {
+      throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
+    });
+    if (!getUser || sha3_512(inputObject.password) !== getUser.password) {
+      throw new Error('USERERR1', 'Password not match');
+    }
+    // Stamp last login date and refresh token
+    getUser.stampTime();
+    getUser.stampNewRefreshToken();
+    await UserUtil.updateRefreshTokenAndLastLogin(
+      Config.MYSQL_CONFIGURATION,
+      getUser.email,
+      getUser.refreshToken,
+      getUser.lastLoginDate,
+    ).catch(error => {
+      throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
+    });
+    response.statusCode = HTTP_REQUEST_SUCCESS;
+    response.body = JSON.stringify({
+      accessToken: getUser.generateAccessToken(),
+      refreshToken: getUser.refreshToken,
+    });
+  } catch (error) {
+    console.log(error);
+    response = errorToHttpStatusCode(error);
   }
 
   callback(null, response);
