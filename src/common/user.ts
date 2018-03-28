@@ -13,6 +13,7 @@ export class User extends BaseCustomClass {
   public password: string;
   public usertype: number;
   public refreshToken: string;
+  public accessToken: string;
   public lastLoginDate: Date;
   public registerDate: Date;
 
@@ -23,6 +24,7 @@ export class User extends BaseCustomClass {
     password: string,
     usertype: number,
     refreshToken: string,
+    accessToken: string,
     lastLoginDate: Date,
     registerDate: Date,
   ) {
@@ -33,6 +35,7 @@ export class User extends BaseCustomClass {
     this.password = password;
     this.usertype = usertype;
     this.refreshToken = refreshToken;
+    this.accessToken = accessToken;
     this.lastLoginDate = lastLoginDate;
     this.registerDate = registerDate;
   }
@@ -65,8 +68,18 @@ export class User extends BaseCustomClass {
         usertype: this.usertype,
       },
       Config.SIGN_TOKEN,
-      { expiresIn: 300 },
+      { expiresIn: Config.ACCESS_TOKEN_TIMEOUT_SECOND },
     );
+    this.accessToken = token;
     return token;
+  }
+
+  public toPlainObject() {
+    const tempPassword = this.password;
+    this.password = '';
+    const returnObject =  Object.assign({}, this);
+    this.password = tempPassword;
+    return returnObject;
+    
   }
 }

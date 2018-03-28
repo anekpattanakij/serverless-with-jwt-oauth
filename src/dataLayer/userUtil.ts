@@ -52,6 +52,7 @@ export class UserUtil {
             executeResult[0].PASSWORD,
             executeResult[0].ROLE,
             executeResult[0].REFRESH_TOKEN,
+            null,
             executeResult[0].LAST_LOGIN_DATE,
             executeResult[0].REGISTER_DATE,
           ),

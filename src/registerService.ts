@@ -50,6 +50,7 @@ export const register = async (event, context, callback) => {
       '',
       null,
       null,
+      null,
     );
 
     // Save user to database

@@ -54,9 +54,10 @@ export const login = async (event, context, callback) => {
       throw new Error(ERROR_CODE_MYSQL_CONNECTION, JSON.stringify(error));
     });
     response.statusCode = HTTP_REQUEST_SUCCESS;
+    // return user information
+    getUser.generateAccessToken();
     response.body = JSON.stringify({
-      accessToken: getUser.generateAccessToken(),
-      refreshToken: getUser.refreshToken,
+      user: getUser.toPlainObject(),
     });
   } catch (error) {
     console.log(error);
