@@ -41,8 +41,8 @@ Sample secure function that should be request with authorizer token, this functi
 1. Create your own mysql server.
 2. run create_table.sql in sqlScript folder on mysql
 
-## Starting server
-npm run develop
+## Starting on-premise serverless server
+serverless offline start
 
 ## Design Concept 
 [POST] http://localhost:3000/chargeByToken
