@@ -53,7 +53,4 @@ Sample secure function that should be request with authorizer token, this functi
 ## Starting on-premise serverless server
 serverless offline start
 
-## Design Concept 
-[POST] http://localhost:3000/chargeByToken
-
 # Good Luck!!
