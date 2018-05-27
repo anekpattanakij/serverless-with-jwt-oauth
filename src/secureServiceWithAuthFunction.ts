@@ -22,11 +22,12 @@ const getBnkMembers = () => {
 };
 
 export const landing = (event, context, callback): void => {
-  authorizeService(event, context, responseFromAuthorizer => {
-    if (responseFromAuthorizer.statusCode === HTTP_REQUEST_SUCCESS) {
-      const members = getBnkMembers();
-      responseFromAuthorizer.body = JSON.stringify(members);
-    }
-    callback(null,responseFromAuthorizer.toPlainObject());
+  const response: ResponseRequest = new ResponseRequest(HTTP_REQUEST_SUCCESS, '');
+  const resultFromAuthorizeService = await authorizeService(event, context).catch(err => {
+    response.body = JSON.stringify(err);
   });
+  if(resultFromAuthorizeService) {
+    response = resultFromAuthorizeService;
+  }
+  callback(null, response);
 };
