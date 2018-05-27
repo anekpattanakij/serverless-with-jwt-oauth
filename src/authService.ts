@@ -16,7 +16,7 @@ import {
 } from './common/responseRequest';
 import { Config } from './config/index';
 
-export const authorizeService = async (
+export const authorizeServicePromise = async (
   event,
   context,
 ): Promise<ResponseRequest> => {
@@ -50,40 +50,102 @@ export const authorizeService = async (
         } catch (err) {
           response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
           if (err.name && err.name === 'TokenExpiredError') {
-            response.body = JSON.stringify(
+            reject(
               new Error(
                 ERROR_CODE_ACCESS_EXPIRE,
                 'Invalid token FAIL on verify.',
               ),
             );
           } else {
-            response.body = JSON.stringify(
+            reject(
               new Error(
                 ERROR_CODE_INVALID_ACCESS_TOKEN,
                 'Invalid token FAIL on verify.',
               ),
             );
           }
-
-          reject(response);
         }
       } else {
-        response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
-        response.body = JSON.stringify(
+        reject(
           new Error(
             ERROR_CODE_NO_AUTHORIZE_IN_HEADER,
             'No authorizationToken found in the header.',
           ),
         );
-        reject(response);
       }
     } catch (err) {
-      console.log(err);
-      response.statusCode = HTTP_REQUEST_FAIL;
-      response.body = JSON.stringify(
-        new Error(ERROR_SERVER_ERROR, 'Error in authservice.'),
-      );
-      reject(response);
+      reject(new Error(ERROR_SERVER_ERROR, 'Error in authservice.'));
     }
   });
+};
+
+export const authorizeService = async (
+  event,
+  context,
+  callback: (n: ResponseRequest) => any,
+) => {
+  const response: ResponseRequest = new ResponseRequest(
+    HTTP_REQUEST_SUCCESS,
+    '',
+  );
+  // check Authorization in header
+  try {
+    if (event.headers.bearer) {
+      const token = event.headers.bearer;
+      // verify token first
+      try {
+        const decoded = jwk.verify(token, Config.SIGN_TOKEN);
+
+        if (decoded) {
+          response.statusCode = HTTP_REQUEST_SUCCESS;
+          response.body = JSON.stringify({ resultFromJWT: decoded });
+        } else {
+          response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
+          response.body = JSON.stringify(
+            new Error(
+              ERROR_CODE_INVALID_ACCESS_TOKEN,
+              'Invalid token not in store',
+            ),
+          );
+        }
+        callback(response);
+      } catch (err) {
+        response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
+        if (err.name && err.name === 'TokenExpiredError') {
+          response.body = JSON.stringify(
+            new Error(
+              ERROR_CODE_ACCESS_EXPIRE,
+              'Invalid token FAIL on verify.',
+            ),
+          );
+        } else {
+          response.body = JSON.stringify(
+            new Error(
+              ERROR_CODE_INVALID_ACCESS_TOKEN,
+              'Invalid token FAIL on verify.',
+            ),
+          );
+        }
+
+        callback(response);
+      }
+    } else {
+      console.log('No authorizationToken found in the header.');
+      response.statusCode = HTTP_REQUEST_UNAUTHORIZE;
+      response.body = JSON.stringify(
+        new Error(
+          ERROR_CODE_NO_AUTHORIZE_IN_HEADER,
+          'No authorizationToken found in the header.',
+        ),
+      );
+      callback(response);
+    }
+  } catch (err) {
+    console.log(err);
+    response.statusCode = HTTP_REQUEST_FAIL;
+    response.body = JSON.stringify(
+      new Error(ERROR_SERVER_ERROR, 'Error in authservice.'),
+    );
+    callback(response);
+  }
 };
